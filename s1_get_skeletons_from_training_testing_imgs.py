@@ -1,22 +1,3 @@
-'''
-s1_get_skeletons_from_training_imgs.py:
-  openpose:
-    model: cmu # cmu or mobilenet_thin. "cmu" is more accurate but slower.
-    img_size: 656x368 #  656x368, or 432x368, 336x288. Bigger is more accurate.
-  input:
-    train_images_description_txt: data/training_set/valid_images.txt
-    test_images_description_txt: data/test_set/valid_images.txt
-    images_train_folder: &train_set_folder data/training_set/
-    images_test_folder: &test_set_folder data/test_set/
-  output:
-    train_images_info_txt: data_proc/raw_skeletons/training_set/images_info.txt
-    test_images_info_txt: data_proc/raw_skeletons/test_set/images_info.txt
-    detected_skeletons_train_folder: &skels_train_folder data_proc/raw_skeletons/training_set/skeleton_res/
-    detected_skeletons_test_folder: &skels_test_folder data_proc/raw_skeletons/test_set/skeleton_res/
-    viz_imgs_train_folder: data_proc/raw_skeletons/training_set/image_viz/
-    viz_imgs_test_folder: data_proc/raw_skeletons/test_set/image_viz/
-'''
-
 import cv2
 import yaml
 
