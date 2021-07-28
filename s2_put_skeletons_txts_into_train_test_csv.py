@@ -1,9 +1,6 @@
-'''
-<<file config>>
-all_train_skeletons_txt: &all_train_skeletons_txt data_proc/raw_skeletons/train_skeletons_info.txt
-all_test_skeletons_txt: &all_test_skeletons_txt data_proc/raw_skeletons/test_skeletons_info.txt
-'''
 import numpy as np
+import csv
+import utils.lib_commons as lib_commons
 
 if True:  # Include project path
     import sys
@@ -11,10 +8,8 @@ if True:  # Include project path
     ROOT = os.path.dirname(os.path.abspath(__file__))+"/../"
     CURR_PATH = os.path.dirname(os.path.abspath(__file__))+"/"
     sys.path.append(ROOT)
+    
 
-    #da capire quali sono le funzioni da importare/usare....
-    import csv
-    import utils.lib_commons as lib_commons
 def par(path):  # Pre-Append ROOT to the path if it's not absolute
     return ROOT + path if (path and path[0] != "/") else path
 
@@ -57,14 +52,9 @@ def write_on_csv(num_skeletons, csvpath, skeletons_folder):
         writer = csv.writer(f)
         #write columns name on the csv file
         writer.writerow(csv_columns)
-        #data = []
         for i in range(num_skeletons):
             # Read skeletons from a txt
             skeletons = read_skeletons_from_ith_txt(i, skeletons_folder)
-            '''
-            ...
-            data.append(skeletons[0])
-            '''
             if not skeletons:  # If empty, discard this image
                 continue
             # write data on the csv file
@@ -92,33 +82,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-'''    
-------------------------------------------------------------------------------
-with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
-writer = csv.DictWriter(f, fieldnames=fieldnames)
-writer.writeheader()
-writer.writerows(rows)
-------------------------------------------------------------------------------
-def list_to_string(txt_list):
-    csv_line = ""
-    for value in txt_list:
-        csv_line += str(value) 
-        if(value != txt_list[-1]):
-            csv_line += ","
-    return csv_line
-
-def load_dataset(filepath, classes):
-    with open(filepath, 'r') as f:
-
-        # Load data
-        dataset = simplejson.load(f)
-
-        # Remove bad data. A bad data is filled with zeros.
-        def is_good_data(row):
-            return row[0] != 0
-        dataset = [row for i, row in enumerate(dataset) if is_good_data(row)]
-
-        X = np.array(dataset) #??
-        return X
-'''
