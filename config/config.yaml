@@ -1,10 +1,6 @@
 # Configurations for this project
 
 # Classes of the actions.
-# Warning: The name of training images folder should start with "${class}_".
-#     In src/s2_put_skeleton_txts_to_a_single_txt.py,
-#     The image whose label is not in `classes` will be filtered out. 
-
 classes: ['arms', 'legs', 'foldedLegs', 'coreStability']
 
 image_filename_format: "{:05d}.jpg"
