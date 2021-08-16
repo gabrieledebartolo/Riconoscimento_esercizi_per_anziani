@@ -1,0 +1,59 @@
+# Configurations for this project
+
+# Classes of the actions.
+# Warning: The name of training images folder should start with "${class}_".
+#     In src/s2_put_skeleton_txts_to_a_single_txt.py,
+#     The image whose label is not in `classes` will be filtered out. 
+
+classes: ['arms', 'legs', 'foldedLegs', 'coreStability']
+
+image_filename_format: "{:05d}.jpg"
+skeleton_filename_format: "{:05d}.txt"
+timesteps: 60
+
+features:
+  window_size: 5 # Number of adjacent frames for extracting features. 
+
+s1_get_skeletons_from_training_testing_imgs.py:
+  openpose:
+    model: cmu # cmu or mobilenet_thin. "cmu" is more accurate but slower.
+    img_size: 656x368 #  656x368, or 432x368, 336x288. Bigger is more accurate.
+  input:
+    train_images_description_txt: data/training_set/valid_images.txt
+    test_images_description_txt: data/test_set/valid_images.txt
+    images_train_folder: &train_set_folder data/training_set/
+    images_test_folder: &test_set_folder data/test_set/
+  output:
+    train_folder: data_proc/raw_skeletons/training_set
+    test_folder: data_proc/raw_skeletons/test_set
+    detected_skeletons_train_folder: &skels_train_folder data_proc/raw_skeletons/training_set/skeleton_res/
+    detected_skeletons_test_folder: &skels_test_folder data_proc/raw_skeletons/test_set/skeleton_res/
+
+s2_put_skeletons_txts_into_train_test_csv.py:
+  input: 
+    detected_skeletons_train_folder: *skels_train_folder
+    detected_skeletons_test_folder: *skels_test_folder
+  output:
+    training_set: &training_set data_proc/train_set.csv
+    test_set: &test_set data_proc/test_set.csv
+
+s3_from_train_test_csv_to_overlap.py:
+  input:
+    training_set: *training_set
+    test_set: *test_set
+  output:
+    training_set_overlap: &training_set_overlap data_proc/train_set_overlap.csv
+    test_set_overlap: &test_set_overlap data_proc/test_set_overlap.csv
+    y_train: &y_train data_proc/y_train.csv
+    y_test: &y_test data_proc/y_test.csv
+
+s4_evaluation_model_performance.py:
+  input:
+    training_set_overlap: *training_set_overlap
+    test_set_overlap: *test_set_overlap
+    y_train: *y_train
+    y_test: *y_test
+  output:
+    model_path: model/model.pickle
+    chart_path: data_proc/chart.png
+    
