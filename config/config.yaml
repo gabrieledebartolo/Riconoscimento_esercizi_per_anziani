@@ -1,6 +1,10 @@
 # Configurations for this project
 
 # Classes of the actions.
+# Warning: The name of training images folder should start with "${class}_".
+#     In src/s2_put_skeleton_txts_to_a_single_txt.py,
+#     The image whose label is not in `classes` will be filtered out. 
+
 classes: ['arms', 'legs', 'foldedLegs', 'coreStability']
 
 image_filename_format: "{:05d}.jpg"
@@ -52,4 +56,35 @@ s4_evaluation_model_performance.py:
   output:
     model_path: model/model.pickle
     chart_path: data_proc/chart.png
+
+s5_run.py:
+  # Input:
+  #   For the input data_type, data_path, and model_path,
+  #   please use the command line arguments.
+  # Output:
+  #   The result video and skeleton txts will be saved to
+  #       ${args.output_folder}/${DST_FOLDER_NAME}/${video_name}
+  #       ${args.output_folder}/${DST_FOLDER_NAME}/${skeleton_folder_name}/${skeleton_filename_format}
+  #   where `DST_FOLDER_NAME` is defined in the function `get_dst_folder_name`.
+  #   In short, the input video or folder will have the same output folder name;
+  #             the input webcam will have a time stamp as the folder name.
+  settings:
+    
+    source:
+      webcam_max_framerate: 10.0
+      video_sample_interval: 1
+
+    openpose:
+      model: mobilenet_thin
+      img_size: 432x368
+      # model: cmu
+      # img_size: 432x368
+
+    display:
+      desired_rows: 480 # Resize the image and then display
+  
+  output:
+    video_name: "video.avi" # save the resultant video to file
+    video_fps: 10.0 # at what frame rate to write the output video
+    skeleton_folder_name: "skeletons/"
     
