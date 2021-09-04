@@ -21,11 +21,13 @@ src/s3_preprocess_features.py \
 src/s4_train.py \
 src/s5_run.py \
 
-I primi quattro script sono presenti all'interno del repository sopra citato.
+I primi quattro script sono presenti all'interno del repository sopra citato. 
 
 
 
-**Come eseguire lo script**
+
+<br></br>
+**Come eseguire lo script** 
 
 Lo script src / s5_run.py serve per il riconoscimento delle azioni in tempo reale.
 
@@ -56,6 +58,7 @@ python src/s5_run.py \
 Decomprimere il file e sostituire la cartella source_images3 estratta con quella presente in data/source_images3.
 
 All'interno della cartella si trova il file valid_images.txt, che descrive l'etichetta di ogni immagine che abbiamo usato per l'allenamento. (puoi visualizzarlo su data / source_images3 / valid_images.txt .)
+
 
 
 
