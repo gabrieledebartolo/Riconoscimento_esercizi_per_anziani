@@ -3,7 +3,7 @@ Test action recognition on
 (1) a video, (2) a folder of images, (3) or web camera.
 
 Input:
-    model: model/lstm.pickle
+    model: model/trained_classifier.pickle
 
 Output:
     result video:    output/${video_name}/video.avi
@@ -11,30 +11,6 @@ Output:
     visualization by cv2.imshow() in img_displayer
 '''
 
-'''
-Example of usage:
-
-(1) Test on video file:
-python src/s5_test.py \
-    --model_chosen lstm \
-    --data_type video \
-    --data_path data_test/exercise.avi \
-    --output_folder output
-    
-(2) Test on a folder of images:
-python src/s5_test.py \
-    --model_chosen lstm \
-    --data_type folder \
-    --data_path data_test/apple/ \
-    --output_folder output
-
-(3) Test on web camera:
-python src/s5_test.py \
-    --model_chosen lstm \
-    --data_type webcam \
-    --data_path 0 \
-    --output_folder output
-'''
 
 if True:  # Include project path
     import sys
@@ -72,8 +48,8 @@ def get_command_line_arguments():
         parser = argparse.ArgumentParser(
             description="Test action recognition on \n"
             "(1) a video, (2) a folder of images, (3) or web camera.")
-        parser.add_argument("-m", "--model_chosen", required=False,
-                            default='model/lstm')
+        parser.add_argument("-m", "--model_path", required=False,
+                            default='model/trained_classifier.pickle')
         parser.add_argument("-t", "--data_type", required=False, default='webcam',
                             choices=["video", "folder", "webcam"])
         parser.add_argument("-p", "--data_path", required=False, default="",
@@ -119,14 +95,14 @@ args = get_command_line_arguments()
 
 SRC_DATA_TYPE = args.data_type
 SRC_DATA_PATH = args.data_path
-MODEL_CHOSEN = args.model_chosen
+SRC_MODEL_PATH = args.model_path
 
 DST_FOLDER_NAME = get_dst_folder_name(SRC_DATA_TYPE, SRC_DATA_PATH)
 
 # -- Settings
 
 cfg_all = lib_commons.read_yaml(ROOT + "config/config.yaml")
-cfg = cfg_all["s5_run.py"]
+cfg = cfg_all["s5_test.py"]
 
 CLASSES = np.array(cfg_all["classes"])
 SKELETON_FILENAME_FORMAT = cfg_all["skeleton_filename_format"]
@@ -185,81 +161,6 @@ def select_images_loader(src_data_type, src_data_path):
             SRC_WEBCAM_MAX_FPS, webcam_idx)
     return images_loader
 
-class Classifier(object):
-
-    def __init__(self, model_path, action_labels, window_size):
-
-        # -- Settings
-        self.model = load_model(model_path)
-        if self.model is None:
-            print("my Error: failed to load model")
-            assert False
-        self.action_labels = action_labels
-        #media filtrando i punteggi
-        #maggiore di 0.85 compare l'etichetta
-        self.THRESHOLD_SCORE_FOR_DISP = 0.85
-
-        # -- Time serials storage
-        self.feature_generator = FeatureGenerator(window_size)
-        self.reset()
-
-    def reset(self):
-        self.feature_generator.reset()
-        self.scores_hist = deque()
-        self.scores = None
-
-#funzione punteggio
-    def predict(self, skeleton):
-        ''' Predict the class (string) of the input raw skeleton '''
-        #label sconosciuta
-        LABEL_UNKNOWN = ""
-        is_features_good, features = self.feature_generator.add_cur_skeleton(
-            skeleton)
-       
-        if is_features_good:
-            # convert to 2d array
-            features = features.reshape(-1, features.shape[0])
-            self.scores = self.model.predict(features)
-            #self.scores = self.smooth_scores(curr_scores)
-            #se e' inferiore non compare nulla
-            if self.scores.max() < self.THRESHOLD_SCORE_FOR_DISP:  # If lower than threshold, bad
-                prediced_label = LABEL_UNKNOWN
-            else:
-                predicted_idx = self.scores.argmax()
-                prediced_label = self.action_labels[predicted_idx]
-        else:
-            prediced_label = LABEL_UNKNOWN
-        return prediced_label
-'''
-    def smooth_scores(self, curr_scores):
-        #Smooth the current prediction score
-        #by taking the average with previous scores
-
-        #frame precedenti 2
-        self.scores_hist.append(curr_scores)
-        DEQUE_MAX_SIZE = 2
-        if len(self.scores_hist) > DEQUE_MAX_SIZE:
-            self.scores_hist.popleft()
-
-        if 1:  # Use sum
-            score_sums = np.zeros((len(self.action_labels),))
-        
-            for score in self.scores_hist:
-                score_sums += score
-        
-            score_sums /= len(self.scores_hist)
-            
-            print("\nMean score:\n", score_sums)
-        
-            return score_sums
-
-        else:  # Use multiply
-            score_mul = np.ones((len(self.action_labels),))
-            for score in self.scores_hist:
-                score_mul *= score
-            return score_mul
-'''
-
 class MultiPersonClassifier(object):
     ''' This is a wrapper around ClassifierOnlineTest
         for recognizing actions of multiple people.
@@ -270,7 +171,7 @@ class MultiPersonClassifier(object):
         self.dict_id2clf = {}  # human id -> classifier of this person
 
         # Define a function for creating classifier for new people.
-        self._create_classifier = lambda human_id: Classifier(
+        self._create_classifier = lambda human_id: ClassifierOnlineTest(
             model_path, classes, WINDOW_SIZE)
 
     def classify(self, dict_id2skeleton):
@@ -297,7 +198,7 @@ class MultiPersonClassifier(object):
             # print("  label: {}".format(id2label[id]))
 
         return id2label
-'''
+
     def get_classifier(self, id):
         #Get the classifier based on the person id.
         #Arguments:
@@ -308,7 +209,7 @@ class MultiPersonClassifier(object):
         if id == 'min':
             id = min(self.dict_id2clf.keys())
         return self.dict_id2clf[id]
-'''
+
 
 def remove_skeletons_with_few_joints(skeletons):
     ''' Remove bad skeletons before sending to the tracker '''
@@ -327,7 +228,7 @@ def remove_skeletons_with_few_joints(skeletons):
             good_skeletons.append(skeleton)
     return good_skeletons
 
-def draw_result_img(img_disp, humans, skeleton_detector, label_class):
+def draw_result_img(img_disp, humans, skeleton_detector, multiperson_classifier, label_class):
     ''' Draw skeletons, labels, and prediction scores onto image for display '''
 
     # Resize to a proper size for display
@@ -339,6 +240,9 @@ def draw_result_img(img_disp, humans, skeleton_detector, label_class):
     # Draw all people's skeleton
     skeleton_detector.draw(img_disp, humans)
 
+    # Add blank to the left for displaying prediction scores of each class
+    img_disp = lib_plot.add_white_region_to_left_of_image(img_disp)
+
     # Draw white bar on top of the image and the prediced action
     borderType = cv2.BORDER_CONSTANT
     # shape[0] = rows (y axis)
@@ -347,9 +251,22 @@ def draw_result_img(img_disp, humans, skeleton_detector, label_class):
     top = int(100)
     img_disp = cv2.copyMakeBorder(img_disp, top, 0,0,0, borderType, None, blank)
 
-    cv2.putText(img_disp, text=label_class, org=(int(img_disp.shape[1]/3), 80),
-                        fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=2,
-                            color=(255, 0, 0), thickness=5)
+    if label_class == "jumpingjack" or label_class == "foldedLegs" or label_class == "coreStability":
+        font_scale = 1.3
+        thickness = 3
+    else:
+        font_scale = 2
+        thickness = 5
+    cv2.putText(img_disp, text=label_class, org=(int(img_disp.shape[1]*3/5), 70),
+                        fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=font_scale,
+                            color=(0, 0, 0), thickness=thickness)
+    
+    # Draw predicting score for only 1 person
+    if len(dict_id2skeleton):
+        classifier_of_a_person = multiperson_classifier.get_classifier(
+            id='min')
+        classifier_of_a_person.draw_scores_onto_image(img_disp)
+
     return img_disp
 
 def get_the_skeleton_data_to_save_to_disk(dict_id2skeleton):
@@ -365,6 +282,14 @@ def get_the_skeleton_data_to_save_to_disk(dict_id2skeleton):
         skels_to_save.append([[human_id, label] + skeleton.tolist()])
     return skels_to_save
 
+def calculate_angle(skeleton, first, second, third):
+    
+    radians = np.arctan2(skeleton[2*third+1]-skeleton[2*second+1], skeleton[2*third]-skeleton[2*second])- np.arctan2(skeleton[2*first+1]-skeleton[2*second+1], skeleton[2*first]-skeleton[2*second])
+    angle = np.abs(radians*180.0/np.pi)
+    
+    if angle >180.0:
+        angle = 360-angle
+    return float(format(angle, ".2f"))
 
 # -- Main
 if __name__ == "__main__":
@@ -374,15 +299,7 @@ if __name__ == "__main__":
 
     multiperson_tracker = Tracker()
 
-    #SRC_MODEL_PATH = "model/trained_classifier.pickle"
-    if "cnn" in MODEL_CHOSEN.lower():
-        SRC_MODEL_PATH = "model/cnn_lstm"
-    elif "conv" in MODEL_CHOSEN.lower():
-        SRC_MODEL_PATH = "model/conv_lstm"
-    else:
-        SRC_MODEL_PATH = "model/lstm"
-    
-    print("SRC_MODEL_PATH = " + SRC_MODEL_PATH)
+    SRC_MODEL_PATH = "model/trained_classifier.pickle"
     multiperson_classifier = MultiPersonClassifier(SRC_MODEL_PATH, CLASSES)
 
     # -- Image reader and displayer
@@ -426,17 +343,30 @@ if __name__ == "__main__":
                     dict_id2skeleton)
 
             new_label_class = ""
+            change_label = True
             # Print label of a person
             if len(dict_id2skeleton):
                 min_id = min(dict_id2skeleton.keys())
                 new_label_class = dict_id2label[min_id]
+                skeleton = skeletons[0]
+                if(new_label_class == "foldedLegs" and 
+                        (calculate_angle(skeleton,13,12,10)<60 
+                        or calculate_angle(skeleton,10,9,13)>60) 
+                        and change_label == True):
+                    change_label = False
+                elif((new_label_class == "jumpingjack" or new_label_class == "arms" or new_label_class == "shoulders")and 
+                        calculate_angle(skeleton,11,5,7)<45
+                        and change_label == True):
+                    change_label = False
+                elif (len(new_label_class) == 0 and change_label == True):
+                    change_label = False
                 print("prediced label is :", new_label_class)
 
-            if (len(new_label_class) != 0):
+            if (change_label == True):
                 label_class = new_label_class
 
             # -- Draw
-            img_disp = draw_result_img(img_disp, humans, skeleton_detector, label_class)
+            img_disp = draw_result_img(img_disp, humans, skeleton_detector, multiperson_classifier, label_class)
 
             # -- Display image, and write to video.avi
             img_displayer.display(img_disp, wait_key_ms=1)
