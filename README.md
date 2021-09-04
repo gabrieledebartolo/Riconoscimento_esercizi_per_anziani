@@ -73,3 +73,6 @@ python src/s5_run.py
 
 
 Al termine dell'addestramento, e' possibile eseguire lo script src/s5_run.py
+
+<br></br>
+Nota: Abbiamo modificato la libreria lib_classifier.py presente nella cartella utils del repository sopra citato, per migliorare il design dell'interfaccia. 
