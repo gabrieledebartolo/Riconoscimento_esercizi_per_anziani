@@ -61,7 +61,7 @@ All'interno della cartella si trova il file valid_images.txt, che descrive l'eti
 
 
 
-
+<br></br>
 **Come eserguire il training**
 
 Esegui i seguenti script uno per uno: \
