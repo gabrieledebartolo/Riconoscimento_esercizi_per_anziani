@@ -1,4 +1,4 @@
-# Riconoscimento_esercizi_per_anziani
+# README.md
 
 
 
@@ -57,7 +57,7 @@ python src/s5_run.py \
 
 Decomprimere il file e sostituire la cartella source_images3 estratta con quella presente in data/source_images3.
 
-All'interno della cartella si trova il file valid_images.txt, che descrive l'etichetta di ogni immagine che abbiamo usato per l'allenamento. (puoi visualizzarlo su data / source_images3 / valid_images.txt .)
+All'interno della cartella si trova il file valid_images.txt, che descrive l'etichetta di ogni immagine che è stata usata per l'allenamento. (puoi visualizzarlo su data / source_images3 / valid_images.txt .)
 
 
 
