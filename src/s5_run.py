@@ -228,7 +228,8 @@ def remove_skeletons_with_few_joints(skeletons):
             good_skeletons.append(skeleton)
     return good_skeletons
 
-def draw_result_img(img_disp, humans, skeleton_detector, multiperson_classifier, label_class):
+def draw_result_img(img_disp, humans, skeleton_detector,
+    multiperson_classifier, label_class):
     ''' Draw skeletons, labels, and prediction scores onto image for display '''
 
     # Resize to a proper size for display
@@ -260,12 +261,31 @@ def draw_result_img(img_disp, humans, skeleton_detector, multiperson_classifier,
     cv2.putText(img_disp, text=label_class, org=(int(img_disp.shape[1]*3/5), 70),
                         fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=font_scale,
                             color=(0, 0, 0), thickness=thickness)
+
+    for i in range(-1, len(CLASSES)):
+        FONT_SIZE = 0.7
+        TXT_X = 20
+        TXT_Y = 150 + i*30        
+        color =  255
+
+        if i == -1:
+            s = "Prova questi esercizi:"
+        else:
+            TXT_Y = TXT_Y + 60
+            color = 0
+            s = CLASSES[i]
+
+        cv2.putText(img_disp, text=s, org=(TXT_X, TXT_Y),
+                    fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=FONT_SIZE,
+                    color=(0, 0, color), thickness=2)
     
+    '''
     # Draw predicting score for only 1 person
-    #if len(dict_id2skeleton):
-    classifier_of_a_person = multiperson_classifier.get_classifier(
-            id='min')
-    classifier_of_a_person.draw_scores_onto_image(img_disp)
+    if len(dict_id2skeleton):
+        classifier_of_a_person = multiperson_classifier.get_classifier(id='min')
+        #classifier_of_a_person.draw_scores_onto_image(img_disp)
+        classifier_of_a_person.print_labels_prob()
+    '''
 
     return img_disp
 
@@ -339,8 +359,7 @@ if __name__ == "__main__":
 
             # -- Recognize action of each person
             if len(dict_id2skeleton):
-                dict_id2label = multiperson_classifier.classify(
-                    dict_id2skeleton)
+                dict_id2label = multiperson_classifier.classify(dict_id2skeleton)
 
             new_label_class = ""
             change_label = True
@@ -354,8 +373,8 @@ if __name__ == "__main__":
                         or calculate_angle(skeleton,10,9,13)>60) 
                         and change_label == True):
                     change_label = False
-                elif((new_label_class == "jumpingjack" or new_label_class == "arms" or new_label_class == "shoulders")and 
-                        calculate_angle(skeleton,11,5,7)<45
+                elif((new_label_class == "jumpingjack" or new_label_class == "arms" 
+                    or new_label_class == "shoulders")and calculate_angle(skeleton,11,5,7)<45
                         and change_label == True):
                     change_label = False
                 elif (len(new_label_class) == 0 and change_label == True):
@@ -366,7 +385,8 @@ if __name__ == "__main__":
                 label_class = new_label_class
 
             # -- Draw
-            img_disp = draw_result_img(img_disp, humans, skeleton_detector, multiperson_classifier, label_class)
+            img_disp = draw_result_img(img_disp, humans, skeleton_detector,
+                multiperson_classifier, label_class)
 
             # -- Display image, and write to video.avi
             img_displayer.display(img_disp, wait_key_ms=1)
